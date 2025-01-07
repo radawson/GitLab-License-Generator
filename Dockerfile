@@ -3,6 +3,7 @@ WORKDIR /license-generator
 COPY ./ ./
 RUN <<EOF
 gem install gitlab-license
+chmod +x src/*.rb
 EOF
 VOLUME /license-generator/build
 ENV LICENSE_NAME="Tim Cook"
