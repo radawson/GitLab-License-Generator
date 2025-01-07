@@ -4,21 +4,18 @@
 require 'json'
 require 'optparse'
 
-#
-# this file was removed due to DMCA report
-# following action was taken
-# https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository
-# 
+features_file = nil
+EXPORT_JSON_FILE = nil
 
 OptionParser.new do |opts|
     opts.banner = "Usage: scan.features.rb [options]"
 
     opts.on("-s", "--src-dir PATH", "") do |v|
-        # empty block
+        # Keeping this for compatibility
     end
 
-    opts.on("-f", "--features-file PATH", "") do |v|
-        # empty block
+    opts.on("-f", "--features-file PATH", "Input features file path") do |v|
+        features_file = File.expand_path(v)
     end
 
     opts.on("-o", "--output PATH", "Output to json file (required)") do |v|
@@ -29,7 +26,38 @@ OptionParser.new do |opts|
         puts opts
         exit
     end
-end
-.parse!
+end.parse!
 
-File.open(EXPORT_JSON_FILE, 'w') { |file| file.write("{}") }
+if features_file.nil? || !File.exist?(features_file)
+    puts "[!] features file not found"
+    exit 1
+end
+
+if EXPORT_JSON_FILE.nil?
+    puts "[!] output file path required"
+    exit 1
+end
+
+# Read and parse the features file
+content = File.read(features_file)
+output_dir = File.dirname(EXPORT_JSON_FILE)
+File.write(File.join(output_dir, 'features.rb'), content)
+
+puts "[DEBUG] Features file size: #{content.size} bytes"
+
+features = []
+
+# Extract features from constant arrays
+content.scan(/%i\[(.*?)\]\.freeze/).each do |match|
+    feature_list = match[0].strip.split(/\s+/)
+    puts "[DEBUG] Found feature list with #{feature_list.size} features"
+    features.concat(feature_list)
+end
+
+features.uniq!
+puts "[DEBUG] Total unique features found: #{features.size}"
+
+# Write the features to the output JSON file
+File.open(EXPORT_JSON_FILE, 'w') do |file|
+    file.write(JSON.pretty_generate(features))
+end
