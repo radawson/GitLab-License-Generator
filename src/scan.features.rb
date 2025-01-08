@@ -45,12 +45,23 @@ File.write(File.join(output_dir, 'features.rb'), content)
 
 puts "[DEBUG] Features file size: #{content.size} bytes"
 
+# Look for the first feature list to verify content
+first_list = content.match(/GLOBAL_FEATURES\s*=\s*%i\[(.*?)\]/m)
+if first_list
+    puts "[DEBUG] Found GLOBAL_FEATURES list"
+    puts "[DEBUG] First few features: #{first_list[1].split(/\s+/)[0..5].join(', ')}"
+else
+    puts "[DEBUG] Could not find GLOBAL_FEATURES list"
+    puts "[DEBUG] First 100 chars of content: #{content[0..100]}"
+end
+
 features = []
 
-# Extract features from constant arrays
-content.scan(/%i\[(.*?)\]\.freeze/).each do |match|
+# Extract features from constant arrays with more flexible pattern
+content.scan(/[A-Z_]+_FEATURES\s*=\s*%i\[(.*?)\]/m).each do |match|
     feature_list = match[0].strip.split(/\s+/)
     puts "[DEBUG] Found feature list with #{feature_list.size} features"
+    puts "[DEBUG] Sample features: #{feature_list[0..2].join(', ')}" if feature_list.any?
     features.concat(feature_list)
 end
 
