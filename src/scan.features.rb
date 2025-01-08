@@ -59,7 +59,7 @@ features = []
 
 # Extract features from constant arrays with more flexible pattern
 content.scan(/[A-Z_]+_FEATURES\s*=\s*%i\[(.*?)\]/m).each do |match|
-    feature_list = match[0].strip.split(/\s+/)
+    feature_list = match[0].strip.split(/\s+/).reject(&:empty?)
     puts "[DEBUG] Found feature list with #{feature_list.size} features"
     puts "[DEBUG] Sample features: #{feature_list[0..2].join(', ')}" if feature_list.any?
     features.concat(feature_list)
